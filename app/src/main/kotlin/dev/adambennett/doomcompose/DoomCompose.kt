@@ -1,6 +1,6 @@
 package dev.adambennett.doomcompose
 
-import android.os.Handler
+import android.view.Choreographer
 import androidx.compose.Composable
 import androidx.compose.Model
 import androidx.compose.remember
@@ -10,7 +10,12 @@ import androidx.ui.foundation.CanvasScope
 import androidx.ui.geometry.Rect
 import androidx.ui.graphics.Paint
 import androidx.ui.layout.fillMaxSize
-import dev.adambennett.doomcompose.models.*
+import dev.adambennett.doomcompose.models.CanvasMeasurements
+import dev.adambennett.doomcompose.models.WindDirection
+import dev.adambennett.doomcompose.models.heightPixel
+import dev.adambennett.doomcompose.models.pixelSize
+import dev.adambennett.doomcompose.models.tallerThanWide
+import dev.adambennett.doomcompose.models.widthPixel
 import kotlin.math.floor
 import kotlin.random.Random
 
@@ -45,13 +50,15 @@ fun DoomCanvas(
             measurements(canvasState)
         }
 
-        renderFire(
-            paint,
-            state.pixels,
-            canvasState.heightPixel,
-            canvasState.widthPixel,
-            canvasState.pixelSize
-        )
+        if (state.pixels.isNotEmpty()) {
+            renderFire(
+                paint,
+                state.pixels,
+                canvasState.heightPixel,
+                canvasState.widthPixel,
+                canvasState.pixelSize
+            )
+        }
     }
 }
 
@@ -63,7 +70,7 @@ private fun CanvasScope.renderFire(
     pixelSize: Int
 ) {
     for (column in 0 until widthPixels) {
-        for (row in 0 until heightPixels) {
+        for (row in 0 until heightPixels - 1) {
             drawRect(
                 rect = Rect(
                     (column * pixelSize).toFloat(),
@@ -86,24 +93,21 @@ private fun setupFireView(
     doomState: DoomState,
     windDirection: WindDirection = WindDirection.Left
 ) {
-    val handler = Handler()
-
     val arraySize = canvas.widthPixel * canvas.heightPixel
 
-    val pixelArray = IntArray(arraySize)
-        .apply { forEachIndexed { index, _ -> this[index] = 0 } }
+    val pixelArray = IntArray(arraySize) { 0 }
         .apply { createFireSource(this, canvas) }
 
-    val runnable = object : Runnable {
-        override fun run() {
+    val callback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
             calculateFirePropagation(pixelArray, canvas, windDirection)
             doomState.pixels = pixelArray.toList()
 
-            handler.postDelayed(this, 16)
+            Choreographer.getInstance().postFrameCallback(this)
         }
     }
 
-    runnable.run()
+    Choreographer.getInstance().postFrameCallback(callback)
 }
 
 private fun createFireSource(firePixels: IntArray, canvas: CanvasMeasurements) {

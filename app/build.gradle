@@ -41,6 +41,11 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "0.1.0-dev08"
     }
+
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin/'
+    }
 }
 
 dependencies {
