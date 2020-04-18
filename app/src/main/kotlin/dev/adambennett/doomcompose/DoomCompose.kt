@@ -4,9 +4,9 @@ import android.view.Choreographer
 import androidx.compose.Composable
 import androidx.compose.Model
 import androidx.compose.remember
+import androidx.ui.core.DrawScope
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.Canvas
-import androidx.ui.foundation.CanvasScope
 import androidx.ui.geometry.Rect
 import androidx.ui.graphics.Paint
 import androidx.ui.layout.fillMaxSize
@@ -62,7 +62,7 @@ fun DoomCanvas(
     }
 }
 
-private fun CanvasScope.renderFire(
+private fun DrawScope.renderFire(
     paint: Paint,
     firePixels: List<Int>,
     heightPixels: Int,
